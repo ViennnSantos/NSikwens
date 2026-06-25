@@ -49,15 +49,27 @@ function buildNSUI() {
     if (!grid) return;
 
     const size = nsConfig.gridSize;
-    grid.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+    const wrap = grid.parentElement;
+
+    // Compute cell size to fit inside the wrapper without overflowing
+    const availW   = (wrap.clientWidth  || 500) - 20;
+    const availH   = (wrap.clientHeight || 500) - 20;
+    const available = Math.min(availW, availH > 100 ? availH : availW);
+    const gap      = 5;
+    const cellSize = Math.floor((available - gap * (size - 1)) / size);
+
+    grid.style.gridTemplateColumns = `repeat(${size}, ${cellSize}px)`;
+    grid.style.gridTemplateRows    = `repeat(${size}, ${cellSize}px)`;
     grid.innerHTML = '';
     nsGrid = [];
 
     const totalCells = size * size;
     for (let i = 0; i < totalCells; i++) {
         const cell = document.createElement('div');
-        cell.className = 'ns-cell';
+        cell.className  = 'ns-cell';
         cell.dataset.index = i;
+        cell.style.width  = cellSize + 'px';
+        cell.style.height = cellSize + 'px';
         cell.addEventListener('click', () => handleNSClick(i));
         grid.appendChild(cell);
         nsGrid.push(cell);
