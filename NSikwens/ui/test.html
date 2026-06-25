@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Numbered Sequence Tester</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --accent:       #2dd4a8;
+            --accent-dim:   rgba(45,212,168,0.12);
+            --accent-border:rgba(45,212,168,0.25);
+            --bg:           #0a0d14;
+            --bg-card:      #0f1420;
+            --bg-elevated:  #151b28;
+            --border:       rgba(255,255,255,0.07);
+            --text:         #e2e8f0;
+            --text-muted:   #64748b;
+            --text-dim:     #94a3b8;
+            --success:      #22c55e;
+            --success-dim:  rgba(34,197,94,0.12);
+            --danger:       #ef4444;
+            --danger-dim:   rgba(239,68,68,0.12);
+            --mono:         'JetBrains Mono', monospace;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', system-ui, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 32px 20px 48px;
+        }
+
+        .header { text-align: center; margin-bottom: 28px; }
+        .header-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+        .header-title   { font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
+
+        .layout { display: flex; gap: 20px; max-width: 1200px; width: 100%; align-items: flex-start; }
+
+        .sidebar { width: 320px; flex-shrink: 0; display: flex; flex-direction: column; gap: 14px; }
+
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
+        .card-title { font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+
+        .form-row { margin-bottom: 14px; }
+        .form-row:last-of-type { margin-bottom: 0; }
+
+        .form-label { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 500; color: var(--text-dim); margin-bottom: 7px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .val-badge { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--accent); background: var(--accent-dim); border: 1px solid var(--accent-border); padding: 1px 7px; border-radius: 4px; }
+
+        select {
+            width: 100%; padding: 9px 32px 9px 12px;
+            background: var(--bg-elevated); border: 1px solid var(--border);
+            color: var(--text); border-radius: 8px; font-size: 13px;
+            font-family: 'Inter', sans-serif; outline: none; cursor: pointer;
+            transition: border-color 0.2s; appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 12px center;
+        }
+        select:focus { border-color: var(--accent-border); }
+        select option { background: #1a2236; }
+
+        input[type="range"] {
+            height: 4px; background: var(--bg-elevated);
+            border-radius: 2px; outline: none; border: 1px solid var(--border);
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 14px; height: 14px;
+            border-radius: 50%; background: var(--accent); cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.25); box-shadow: 0 0 8px var(--accent); }
+
+        /* Preset buttons */
+        .preset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 16px; }
+        .preset-btn { padding: 8px 10px; background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text-dim); border-radius: 7px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; transition: all 0.15s; text-align: center; }
+        .preset-btn:hover { border-color: var(--accent-border); color: var(--text); }
+        .preset-btn.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+
+        .btn-launch { width: 100%; padding: 12px; background: var(--accent); border: none; color: #070a13; border-radius: 8px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: all 0.2s; margin-top: 16px; }
+        .btn-launch:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+        /* Terminal */
+        .terminal { background: #07090f; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-family: var(--mono); font-size: 11px; height: 140px; display: flex; flex-direction: column; }
+        .terminal-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 9px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+        .terminal-bar-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); }
+        .terminal-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px var(--accent); animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+        .terminal-log { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 3px; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+        .log-item { line-height: 1.5; }
+        .log-item .ts { color: rgba(255,255,255,0.2); margin-right: 6px; }
+        .log-item.info    { color: #7dd3fc; }
+        .log-item.success { color: #4ade80; }
+        .log-item.failure { color: #f87171; }
+        .log-item.warning { color: #fbbf24; }
+        .log-item.endpoint{ color: #c084fc; }
+
+        /* Game area */
+        .game-area { flex: 1; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 12px; text-align: center; }
+        .stat-val   { font-family: var(--mono); font-size: 20px; font-weight: 600; color: var(--text); line-height: 1; }
+        .stat-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-top: 4px; }
+        .stat-card.highlight .stat-val { color: var(--accent); }
+
+        .iframe-wrap { position: relative; background: #05080f; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; height: 500px; transition: border-color 0.3s; }
+        .iframe-wrap.active { border-color: var(--accent); }
+        .iframe-wrap iframe { width: 100%; height: 100%; border: none; }
+
+        .result-banner { position: absolute; top: 20px; left: 50%; transform: translateX(-50%) translateY(-20px); opacity: 0; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 22px; text-align: center; z-index: 100; pointer-events: none; transition: all 0.35s cubic-bezier(0.175,0.885,0.32,1.275); white-space: nowrap; }
+        .result-banner.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        .result-banner.success { border-color: rgba(34,197,94,0.4); background: var(--success-dim); }
+        .result-banner.failure { border-color: rgba(239,68,68,0.4); background: var(--danger-dim); }
+        .result-banner .rb-title { font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+        .result-banner.success .rb-title { color: var(--success); }
+        .result-banner.failure .rb-title { color: var(--danger); }
+        .result-banner .rb-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; font-family: var(--mono); }
+
+        .tip { font-size: 11px; color: var(--text-muted); text-align: center; }
+        .tip strong { color: var(--text-dim); }
+
+        /* History */
+        .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+        .history-title  { font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); }
+        .clear-btn { font-size: 10px; font-weight: 500; color: var(--text-muted); background: none; border: 1px solid var(--border); border-radius: 4px; padding: 2px 8px; cursor: pointer; transition: all 0.15s; text-transform: uppercase; letter-spacing: 0.5px; }
+        .clear-btn:hover { border-color: var(--danger); color: var(--danger); }
+        .history-list { display: flex; flex-direction: column; gap: 6px; max-height: 200px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+        .history-empty { font-size: 12px; color: var(--text-muted); text-align: center; padding: 16px 0; font-style: italic; }
+        .history-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 7px; font-size: 11px; }
+        .history-item.win  { border-left: 2px solid var(--success); }
+        .history-item.loss { border-left: 2px solid var(--danger); }
+        .hi-badge { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 6px; border-radius: 3px; flex-shrink: 0; }
+        .win  .hi-badge { background: var(--success-dim); color: var(--success); }
+        .loss .hi-badge { background: var(--danger-dim);  color: var(--danger); }
+        .hi-stats  { font-family: var(--mono); color: var(--text-dim); flex: 1; }
+        .hi-preset { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .hi-time   { font-size: 10px; color: var(--text-muted); font-family: var(--mono); }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-eyebrow">FiveM Minigame Dev</div>
+    <div class="header-title">Numbered Sequence Tester</div>
+</div>
+
+<div class="layout">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="card">
+            <div class="card-title">Configuration</div>
+
+            <!-- Presets -->
+            <div class="preset-grid">
+                <button class="preset-btn" data-preset="easy">Easy</button>
+                <button class="preset-btn active" data-preset="medium">Medium</button>
+                <button class="preset-btn" data-preset="hard">Hard</button>
+                <button class="preset-btn" data-preset="extreme">Extreme</button>
+            </div>
+
+            <!-- Grid Size -->
+            <div class="form-row">
+                <div class="form-label">Grid Size <span class="val-badge" id="gridSize-val">4×4</span></div>
+                <select id="gridSize">
+                    <option value="4">4 × 4</option>
+                    <option value="6" selected>6 × 6</option>
+                    <option value="8">8 × 8</option>
+                    <option value="10">10 × 10</option>
+                </select>
+            </div>
+
+            <!-- Number Count -->
+            <div class="form-row">
+                <div class="form-label">Numbers to Memorize <span class="val-badge" id="numCount-val">6</span></div>
+                <select id="numCount">
+                    <option value="6" selected>1 – 6</option>
+                    <option value="8">1 – 8</option>
+                    <option value="10">1 – 10</option>
+                    <option value="12">1 – 12</option>
+                </select>
+            </div>
+
+            <!-- Memorize Time -->
+            <div class="form-row">
+                <div class="form-label">Memorize Time <span class="val-badge" id="memTime-val">5s</span></div>
+                <input type="range" id="memTime" min="2" max="15" step="1" value="5">
+            </div>
+
+            <!-- Recall Time -->
+            <div class="form-row">
+                <div class="form-label">Recall Time <span class="val-badge" id="recallTime-val">30s</span></div>
+                <input type="range" id="recallTime" min="10" max="60" step="5" value="30">
+            </div>
+
+            <!-- Rounds -->
+            <div class="form-row">
+                <div class="form-label">Rounds <span class="val-badge" id="rounds-val">3</span></div>
+                <input type="range" id="rounds" min="1" max="5" step="1" value="3">
+            </div>
+
+            <button class="btn-launch" id="start-btn">▶ &nbsp;Start Test</button>
+        </div>
+
+        <!-- Terminal -->
+        <div class="terminal">
+            <div class="terminal-bar">
+                <span class="terminal-bar-label">Console</span>
+                <div class="terminal-dot"></div>
+            </div>
+            <div class="terminal-log" id="terminal-log">
+                <div class="log-item info"><span class="ts">[SYS]</span> Console ready.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game + History -->
+    <div class="game-area">
+
+        <div class="stats-row">
+            <div class="stat-card highlight">
+                <div class="stat-val" id="stat-runs">0</div>
+                <div class="stat-label">Runs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-val" id="stat-wins">0</div>
+                <div class="stat-label">Wins</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-val" id="stat-losses">0</div>
+                <div class="stat-label">Losses</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-val" id="stat-streak">0</div>
+                <div class="stat-label">Win Streak</div>
+            </div>
+        </div>
+
+        <div class="iframe-wrap" id="iframe-container">
+            <div class="result-banner" id="result-banner">
+                <div class="rb-title" id="rb-title">—</div>
+                <div class="rb-desc"  id="rb-desc"></div>
+            </div>
+            <iframe id="game-frame" src="index.html" allow="scripts"></iframe>
+        </div>
+
+        <div class="tip">
+            <strong>Tip:</strong> Click inside the game area to focus. Press <strong>SPACE</strong> to retry after a run.
+        </div>
+
+        <div class="card">
+            <div class="history-header">
+                <span class="history-title">Run History</span>
+                <button class="clear-btn" id="clear-btn">Clear</button>
+            </div>
+            <div class="history-list" id="history-list">
+                <div class="history-empty">No runs yet — start a test to see results here.</div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const iframe          = document.getElementById('game-frame');
+    const iframeContainer = document.getElementById('iframe-container');
+    const startBtn        = document.getElementById('start-btn');
+    const terminalLog     = document.getElementById('terminal-log');
+    const historyList     = document.getElementById('history-list');
+    const clearBtn        = document.getElementById('clear-btn');
+    const resultBanner    = document.getElementById('result-banner');
+
+    // ── Controls ──
+    const controls = {
+        gridSize:   { el: document.getElementById('gridSize'),   badge: document.getElementById('gridSize-val'),   type: 'select', unit: '' },
+        numCount:   { el: document.getElementById('numCount'),   badge: document.getElementById('numCount-val'),   type: 'select', unit: '' },
+        memTime:    { el: document.getElementById('memTime'),    badge: document.getElementById('memTime-val'),    type: 'range',  unit: 's' },
+        recallTime: { el: document.getElementById('recallTime'), badge: document.getElementById('recallTime-val'), type: 'range',  unit: 's' },
+        rounds:     { el: document.getElementById('rounds'),     badge: document.getElementById('rounds-val'),     type: 'range',  unit: '' },
+    };
+
+    // ── Presets ──
+    const presets = {
+        easy:    { gridSize: '4',  numCount: '6',  memTime: 8,  recallTime: 60, rounds: 2 },
+        medium:  { gridSize: '6',  numCount: '6',  memTime: 5,  recallTime: 30, rounds: 3 },
+        hard:    { gridSize: '8',  numCount: '10', memTime: 4,  recallTime: 20, rounds: 3 },
+        extreme: { gridSize: '10', numCount: '12', memTime: 3,  recallTime: 15, rounds: 5 },
+    };
+
+    let activePreset = 'medium';
+    let currentStreak = 0;
+
+    function updateBadge(key) {
+        const c = controls[key];
+        if (key === 'gridSize') {
+            c.badge.textContent = c.el.value + '×' + c.el.value;
+        } else if (key === 'numCount') {
+            c.badge.textContent = c.el.value;
+        } else {
+            c.badge.textContent = c.el.value + c.unit;
+        }
+    }
+
+    function applyPreset(key) {
+        const p = presets[key];
+        if (!p) return;
+        activePreset = key;
+
+        controls.gridSize.el.value   = p.gridSize;
+        controls.numCount.el.value   = p.numCount;
+        controls.memTime.el.value    = p.memTime;
+        controls.recallTime.el.value = p.recallTime;
+        controls.rounds.el.value     = p.rounds;
+
+        Object.keys(controls).forEach(updateBadge);
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.toggle('active', b.dataset.preset === key));
+    }
+
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.addEventListener('click', () => applyPreset(btn.dataset.preset));
+    });
+
+    // Live update badges & mark custom
+    Object.entries(controls).forEach(([key, c]) => {
+        const evt = c.type === 'select' ? 'change' : 'input';
+        c.el.addEventListener(evt, () => {
+            updateBadge(key);
+            activePreset = 'custom';
+            document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+        });
+    });
+
+    applyPreset('medium');
+
+    // ── Stats / History ──
+    let stats   = JSON.parse(localStorage.getItem('ns_stats')   || '{"runs":0,"wins":0,"losses":0}');
+    let history = JSON.parse(localStorage.getItem('ns_history') || '[]');
+
+    function saveData() {
+        localStorage.setItem('ns_stats',   JSON.stringify(stats));
+        localStorage.setItem('ns_history', JSON.stringify(history));
+    }
+
+    function renderStats() {
+        document.getElementById('stat-runs').textContent    = stats.runs;
+        document.getElementById('stat-wins').textContent    = stats.wins;
+        document.getElementById('stat-losses').textContent  = stats.losses;
+        document.getElementById('stat-streak').textContent  = currentStreak;
+    }
+
+    function renderHistory() {
+        if (!history.length) {
+            historyList.innerHTML = '<div class="history-empty">No runs yet — start a test to see results here.</div>';
+            return;
+        }
+        historyList.innerHTML = '';
+        [...history].reverse().forEach(run => {
+            const item = document.createElement('div');
+            item.className = `history-item ${run.success ? 'win' : 'loss'}`;
+            item.innerHTML = `
+                <span class="hi-badge">${run.success ? 'WIN' : 'LOSS'}</span>
+                <span class="hi-stats">Grid: ${run.grid} &nbsp;|&nbsp; Numbers: ${run.nums} &nbsp;|&nbsp; Rounds: ${run.rounds}</span>
+                <span class="hi-preset">${run.preset}</span>
+                <span class="hi-time">${run.time}</span>
+            `;
+            historyList.appendChild(item);
+        });
+    }
+
+    renderStats();
+    renderHistory();
+
+    clearBtn.addEventListener('click', () => {
+        history = [];
+        stats   = { runs: 0, wins: 0, losses: 0 };
+        currentStreak = 0;
+        saveData();
+        renderStats();
+        renderHistory();
+        log('History cleared.', 'warning');
+    });
+
+    // ── Terminal ──
+    function log(msg, type = 'info') {
+        const ts = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const el = document.createElement('div');
+        el.className = `log-item ${type}`;
+        el.innerHTML = `<span class="ts">[${ts}]</span> ${msg}`;
+        terminalLog.appendChild(el);
+        terminalLog.scrollTop = terminalLog.scrollHeight;
+    }
+
+    // ── NUI Callback ──
+    function handleNuiCallback(url, payload) {
+        const endpoint = url.substring(url.lastIndexOf('/') + 1);
+        log(`Callback: <strong>${endpoint}</strong>`, 'endpoint');
+
+        if (endpoint === 'nsResult') {
+            iframeContainer.classList.remove('active');
+            const success = payload.success;
+            const banner  = resultBanner;
+
+            banner.className = `result-banner show ${success ? 'success' : 'failure'}`;
+            document.getElementById('rb-title').textContent = success ? 'SEQUENCE COMPLETE' : 'SEQUENCE FAILED';
+            document.getElementById('rb-desc').textContent  = success
+                ? `Completed ${payload.rounds} round(s) successfully.`
+                : `Failed on round ${payload.rounds}.`;
+
+            setTimeout(() => banner.classList.remove('show'), 4500);
+
+            stats.runs++;
+            if (success) {
+                stats.wins++;
+                currentStreak++;
+                log(`Result: WIN — ${payload.rounds} round(s)`, 'success');
+            } else {
+                stats.losses++;
+                currentStreak = 0;
+                log('Result: FAILED', 'failure');
+            }
+
+            const presetLabel = { easy:'Easy', medium:'Medium', hard:'Hard', extreme:'Extreme', custom:'Custom' }[activePreset] || activePreset;
+            const cfg = payload.config || {};
+
+            history.push({
+                success,
+                rounds: payload.rounds,
+                grid:   (cfg.gridSize || '?') + '×' + (cfg.gridSize || '?'),
+                nums:   cfg.numberCount || '?',
+                preset: presetLabel,
+                time:   new Date().toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit' })
+            });
+
+            if (history.length > 50) history.shift();
+            saveData();
+            renderStats();
+            renderHistory();
+        }
+    }
+
+    // ── iframe Hooks ──
+    iframe.onload = () => {
+        log('Game frame loaded.', 'success');
+        try {
+            const win = iframe.contentWindow;
+            win.document.body.style.cssText = 'background:#0a0d14;';
+            win.GetParentResourceName = () => 'glitch-minigames';
+
+            const origFetch = win.fetch;
+            win.fetch = async function(resource, options) {
+                if (typeof resource === 'string' && resource.includes('nsResult')) {
+                    let payload = {};
+                    try { payload = JSON.parse(options?.body || '{}'); } catch(e) {}
+                    handleNuiCallback(resource, payload);
+                    return new Response(JSON.stringify({ success: true }));
+                }
+                return origFetch(resource, options);
+            };
+        } catch(err) {
+            log(`Frame hook error: ${err.message}`, 'failure');
+        }
+    };
+
+    // ── Start Button ──
+    startBtn.addEventListener('click', () => {
+        const gridSize    = parseInt(controls.gridSize.el.value);
+        const numberCount = parseInt(controls.numCount.el.value);
+        const memorizeTime= parseInt(controls.memTime.el.value);
+        const recallTime  = parseInt(controls.recallTime.el.value);
+        const rounds      = parseInt(controls.rounds.el.value);
+
+        log(`Starting — Grid: ${gridSize}×${gridSize} | Numbers: 1–${numberCount} | Mem: ${memorizeTime}s | Recall: ${recallTime}s`, 'info');
+
+        iframeContainer.classList.add('active');
+
+        iframe.contentWindow.postMessage({
+            action: 'startNS',
+            config: { gridSize, numberCount, memorizeTime, recallTime, rounds }
+        }, '*');
+
+        iframe.focus();
+    });
+</script>
+</body>
+</html>
